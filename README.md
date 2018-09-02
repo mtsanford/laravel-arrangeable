@@ -65,7 +65,7 @@ If through other operations the ordering is out of whack, fix it.
 
 ```php
 // (foreign key if used)
-MyModel::arrangeableMoveGroup(2);
+MyModel::arrangeableFixOrder(2);
 
 // | id | foreign_id | order |                | id | foreign_id | order |
 // | -- | ---------- | ----- |                | -- | ---------- | ----- |
