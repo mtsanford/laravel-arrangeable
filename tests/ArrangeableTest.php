@@ -31,10 +31,10 @@ class ArrangeableTest extends TestCase
         $passengers1 = factory(Passenger::class, 3)->create(['car_id' => $car1->id]);
         $passengers2 = factory(Passenger::class, 3)->create(['car_id' => $car2->id]);
 
-        $o = Passenger::where('car_id', $car1->id)->arranged()->get()->pluck('order')->all();
+        $o = Passenger::where('car_id', $car1->id)->arrange()->get()->pluck('order')->all();
         $this->assertEquals($o, [0,1,2]);
 
-        $o = Passenger::where('car_id', $car2->id)->arranged()->get()->pluck('order')->all();
+        $o = Passenger::where('car_id', $car2->id)->arrange()->get()->pluck('order')->all();
         $this->assertEquals($o, [0,1,2]);
     }
 
@@ -48,10 +48,10 @@ class ArrangeableTest extends TestCase
         $cars = factory(Car::class, 3)->create();
         $passengers1 = factory(Passenger::class, 3)->create(['car_id' => $cars[1]->id]);
 
-        $o = Car::arranged()->get()->pluck('order')->all();
+        $o = Car::arrange()->get()->pluck('order')->all();
         $this->assertEquals($o, [1,2,3]);
 
-        $o = Passenger::where('car_id', $cars[1]->id)->arranged()->get()->pluck('order')->all();
+        $o = Passenger::where('car_id', $cars[1]->id)->arrange()->get()->pluck('order')->all();
         $this->assertEquals($o, [2,3,4]);
 
         unset(Car::$arrangeableConfig['start_order']);
@@ -73,7 +73,7 @@ class ArrangeableTest extends TestCase
    	   	$this->assertEquals($last->order, 3);
 
         // and they should be in 0,1,2.. order
-        $o = Car::query()->arranged()->get()->pluck('order')->all();
+        $o = Car::query()->arrange()->get()->pluck('order')->all();
         $this->assertEquals($o, [0,1,2,3]);
     }
 
@@ -89,10 +89,10 @@ class ArrangeableTest extends TestCase
     	$passengers1->where('order', 2)->first()->delete();
     	$passengers2->where('order', 4)->first()->delete();
 
-        $o = Passenger::where('car_id', $car1->id)->arranged()->get()->pluck('order')->all();
+        $o = Passenger::where('car_id', $car1->id)->arrange()->get()->pluck('order')->all();
         $this->assertEquals($o, [0,1,2]);
 
-        $o = Passenger::where('car_id', $car2->id)->arranged()->get()->pluck('order')->all();
+        $o = Passenger::where('car_id', $car2->id)->arrange()->get()->pluck('order')->all();
         $this->assertEquals($o, [0,1,2,3]);
     }
 
@@ -102,11 +102,11 @@ class ArrangeableTest extends TestCase
         $car = factory(Car::class)->create();
         $lessons = factory(Passenger::class, 5)->create(['car_id' => $car->id]);
 
-        $reverse_ids = array_reverse(Passenger::query()->arranged()->get()->pluck('id')->toArray());
+        $reverse_ids = array_reverse(Passenger::query()->arrange()->get()->pluck('id')->toArray());
 
         Passenger::arrangeableNewOrder($reverse_ids);
 
-        $o = Passenger::query()->arranged()->get()->pluck('id')->toArray();
+        $o = Passenger::query()->arrange()->get()->pluck('id')->toArray();
         $this->assertEquals($o, $reverse_ids);
     }
 
@@ -128,10 +128,10 @@ class ArrangeableTest extends TestCase
 
         Passenger::arrangeableMoveGroup($pulled, $car2->id);
 
-        $o = Passenger::where('car_id', $car1->id)->arranged()->get()->pluck('id')->toArray();
+        $o = Passenger::where('car_id', $car1->id)->arrange()->get()->pluck('id')->toArray();
         $this->assertEquals($o, array_values($passenger1_ids->all()));
 
-        $o = Passenger::where('car_id', $car2->id)->arranged()->get()->pluck('id')->toArray();
+        $o = Passenger::where('car_id', $car2->id)->arrange()->get()->pluck('id')->toArray();
         $this->assertEquals($o, array_values($passenger2_ids->all()));
     }
 
@@ -145,7 +145,7 @@ class ArrangeableTest extends TestCase
 
         Car::arrangeableFixOrder();
 
-        $o = Car::arranged()->get()->pluck('order')->toArray();
+        $o = Car::arrange()->get()->pluck('order')->toArray();
         $this->assertEquals($o, [0,1,2,3,4]);
     }
 
@@ -160,7 +160,7 @@ class ArrangeableTest extends TestCase
 
         Passenger::arrangeableFixOrder($car->id);
 
-        $o = Passenger::where('car_id', $car->id)->arranged()->get()->pluck('order')->toArray();
+        $o = Passenger::where('car_id', $car->id)->arrange()->get()->pluck('order')->toArray();
         $this->assertEquals($o, [0,1,2,3,4]);
     }
 

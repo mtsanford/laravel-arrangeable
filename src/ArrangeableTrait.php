@@ -203,14 +203,12 @@ trait ArrangeableTrait
     }
 
     /**
-     * Let's be nice and provide an ordered scope.
-     *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param string $direction
      *
      * @return \Illuminate\Database\Query\Builder
      */
-    public function scopeArranged(Builder $query, string $direction = 'asc')
+    public function scopeArrange(Builder $query, string $direction = 'asc')
     {
         $orderColumnName = static::arrangeableGetConfig('order_key');        
         return $query->orderBy($orderColumnName, $direction);
