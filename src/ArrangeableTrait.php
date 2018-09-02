@@ -2,6 +2,7 @@
 
 namespace MTSanford\LaravelArrangeable;
 
+use InvalidArgumentException;
 use Illuminate\Database\Eloquent\Builder;
 
 trait ArrangeableTrait
@@ -20,7 +21,7 @@ trait ArrangeableTrait
         order_key:       the column in the model that holds the order
         foreign_key:     order will be maintained with models that have same foreign key
                          or in the entire table if NULL.
-        start order      value of order_key for the start of the list
+        start_order      value of order_key for the start of the list
         handle_create    automatically set order_key on new models to end of list?
         handle_delete    automatically maintain order when a model is removed?
     ****/
@@ -61,15 +62,16 @@ trait ArrangeableTrait
      * This function reorders the records: the record with the first id in the array
      * will get order 1, the record with the second it will get order 2, ...
      *
-     * If $foreignId is set, the foreign key will be set on each model
+     * If $foreignKeyValue is set, the foreign key will be set on each model
      *
      * Caution: No validation is done!
      *
      * @param array|\ArrayAccess    $ids
-     * @param int                   $foreignId     
+     * @param int                   $foreignKeyValue     
      */
-    public static function arrangeableNewOrder($ids, $foreignId = NULL)
+    public static function arrangeableNewOrder($ids, $foreignKeyValue = NULL)
     {
+
         $order = static::arrangeableGetConfig('start_order');
         $orderColumnName = static::arrangeableGetConfig('order_key');
         $primaryKeyColumn = static::arrangeableGetConfig('primary_key');
@@ -77,7 +79,7 @@ trait ArrangeableTrait
 
         foreach ($ids as $id) {
             $update = [$orderColumnName => $order++];
-            if ($foreignId !== NULL) { $update[$foreignKeyColumn] = $foreignId; }
+            if ($foreignKeyValue !== NULL) { $update[$foreignKeyColumn] = $foreignKeyValue; }
             static::where($primaryKeyColumn, $id)->update($update);
         }
     }
@@ -85,11 +87,12 @@ trait ArrangeableTrait
 
     /**
      * Move a list of models to then end of another grouping (foreign key)
+     * Only for arrangeable tables that have a foreign key.
      *
      * @param array|\ArrayAccess $ids
      * @param int $startOrder
      */
-    public static function arrangeableMoveGroup($ids, $foreignId)
+    public static function arrangeableMoveGroup($ids, $foreignKeyValue)
     {
 
         $primaryKeyColumn = static::arrangeableGetConfig('primary_key');
@@ -103,11 +106,11 @@ trait ArrangeableTrait
                            ->get()
                            ->pluck($foreignKeyColumn)
                            ->unique()
-                           ->diff([$foreignId]);
+                           ->diff([$foreignKeyValue]);
 
         // The new ordering for the group is the existing order, but with the
         // without the ones to be moved.  They'll end up at the end.
-        $newOrder = static::where($foreignKeyColumn, $foreignId)
+        $newOrder = static::where($foreignKeyColumn, $foreignKeyValue)
                       ->orderBy($orderColumnName)
                       ->select($primaryKeyColumn)
                       ->get()
@@ -115,7 +118,7 @@ trait ArrangeableTrait
                       ->diff($ids)
                       ->concat($ids);
 
-        static::arrangeableNewOrder($newOrder, $foreignId);
+        static::arrangeableNewOrder($newOrder, $foreignKeyValue);
 
         $needsFixOrder->each(function($id) {
             static::arrangeableFixOrder($id);
@@ -130,11 +133,16 @@ trait ArrangeableTrait
      * @param array|\ArrayAccess $ids
      * @param int $startOrder
      */
-    public static function arrangeableFixOrder($foreignKeyValue)
+    public static function arrangeableFixOrder($foreignKeyValue = NULL)
     {
         $order = static::arrangeableGetConfig('start_order');
         $orderColumnName = static::arrangeableGetConfig('order_key');
         $primaryKeyColumn = static::arrangeableGetConfig('primary_key');
+        $foreignKeyColumn = static::arrangeableGetConfig('foreign_key');
+
+        if ($foreignKeyColumn !== NULL && $foreignKeyValue === NULL) {
+            throw new InvalidArgumentException("Foreign key value required");
+        }
 
         $models = static::arrangeableModelQuery($foreignKeyValue)
             ->orderBy($orderColumnName)->select($primaryKeyColumn, $orderColumnName)->get();
@@ -185,7 +193,7 @@ trait ArrangeableTrait
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function arrangeableModelQuery($foreignKeyValue)
+    public static function arrangeableModelQuery($foreignKeyValue = null)
     {
         $foreignKeyColumn = static::arrangeableGetConfig('foreign_key');
 

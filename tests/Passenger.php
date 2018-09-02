@@ -9,7 +9,7 @@ class Passenger extends Model
 {
     use ArrangeableTrait;
 
-    protected static $arrangeableConfig = [
+    public static $arrangeableConfig = [
         'foreign_key'    => 'car_id',
     ];
 

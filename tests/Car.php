@@ -9,6 +9,8 @@ class Car extends Model
 {
     use ArrangeableTrait;
 
+    public static $arrangeableConfig = [];
+
     protected $table = 'cars';
     protected $guarded = [];
     public $timestamps = false;
