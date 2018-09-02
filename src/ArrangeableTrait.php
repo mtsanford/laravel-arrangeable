@@ -17,17 +17,17 @@ trait ArrangeableTrait
         ];
         
         primary_key:     primary key of the model
-        order_column:    the column in the model that holds the order
+        order_key:       the column in the model that holds the order
         foreign_key:     order will be maintained with models that have same foreign key
-                         of in the entire table if NULL.
-        start order      value of order_column for the start of the list
-        handle_create    automatically set order_column on new models to end of list?
+                         or in the entire table if NULL.
+        start order      value of order_key for the start of the list
+        handle_create    automatically set order_key on new models to end of list?
         handle_delete    automatically maintain order when a model is removed?
     ****/
 
     protected static $arrangeableConfigDefaults = [
         'primary_key'    => 'id',
-        'order_column'   => 'order',
+        'order_key'      => 'order',
         'foreign_key'    => NULL,
         'start_order'    => 0,
         'handle_create'  => true,
@@ -71,7 +71,7 @@ trait ArrangeableTrait
     public static function arrangeableNewOrder($ids, $foreignId = NULL)
     {
         $order = static::arrangeableGetConfig('start_order');
-        $orderColumnName = static::arrangeableGetConfig('order_column');
+        $orderColumnName = static::arrangeableGetConfig('order_key');
         $primaryKeyColumn = static::arrangeableGetConfig('primary_key');
         $foreignKeyColumn = static::arrangeableGetConfig('foreign_key');
 
@@ -94,7 +94,7 @@ trait ArrangeableTrait
 
         $primaryKeyColumn = static::arrangeableGetConfig('primary_key');
         $foreignKeyColumn = static::arrangeableGetConfig('foreign_key');
-        $orderColumnName = static::arrangeableGetConfig('order_column');
+        $orderColumnName = static::arrangeableGetConfig('order_key');
 
         // figure out which groups will need to have their order fixed.  That's
         // all the groups the models are currently in, except the target group.
@@ -133,7 +133,7 @@ trait ArrangeableTrait
     public static function arrangeableFixOrder($foreignKeyValue)
     {
         $order = static::arrangeableGetConfig('start_order');
-        $orderColumnName = static::arrangeableGetConfig('order_column');
+        $orderColumnName = static::arrangeableGetConfig('order_key');
         $primaryKeyColumn = static::arrangeableGetConfig('primary_key');
 
         $models = static::arrangeableModelQuery($foreignKeyValue)
@@ -151,7 +151,7 @@ trait ArrangeableTrait
     public function arrangeableSetHighestOrderNumber()
     {
         $startOrder = static::arrangeableGetConfig('start_order');
-        $orderColumnName = static::arrangeableGetConfig('order_column');
+        $orderColumnName = static::arrangeableGetConfig('order_key');
 
         $max = $this->arrangeableGetHighestOrderNumber();
 
@@ -165,7 +165,7 @@ trait ArrangeableTrait
      */
     public function arrangeableGetHighestOrderNumber()
     {
-        $orderColumnName = static::arrangeableGetConfig('order_column');
+        $orderColumnName = static::arrangeableGetConfig('order_key');
 
         return static::arrangeableModelQuery($this->arrangeableGetForeignKeyValue())
                            ->max($orderColumnName);
@@ -204,7 +204,7 @@ trait ArrangeableTrait
      */
     public function scopeArranged(Builder $query, string $direction = 'asc')
     {
-        $orderColumnName = static::arrangeableGetConfig('order_column');        
+        $orderColumnName = static::arrangeableGetConfig('order_key');        
         return $query->orderBy($orderColumnName, $direction);
     }
 }

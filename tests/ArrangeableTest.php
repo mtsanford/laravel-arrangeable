@@ -11,12 +11,6 @@ use MTSanford\LaravelArrangeable\Test\Passenger;
 class ArrangeableTest extends TestCase
 {
     use DatabaseMigrations;
-
-    /** @test */
-    public function testFirst() {
-        $this->assertEquals(2,2);
-    }
-
     
     /** @test */
     public function testCreateNoForeignKey()
