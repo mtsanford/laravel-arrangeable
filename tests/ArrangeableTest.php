@@ -97,20 +97,21 @@ class ArrangeableTest extends TestCase
     }
 
     /** @test */
-    public function testNewOrder()
+    public function testMoveNoForeignKeyProvided()
     {
         $car = factory(Car::class)->create();
         $lessons = factory(Passenger::class, 5)->create(['car_id' => $car->id]);
 
         $reverse_ids = array_reverse(Passenger::query()->arrange()->get()->pluck('id')->toArray());
 
-        Passenger::arrangeableNewOrder($reverse_ids);
+        Passenger::arrangeableMove($reverse_ids);
 
         $o = Passenger::query()->arrange()->get()->pluck('id')->toArray();
         $this->assertEquals($o, $reverse_ids);
     }
 
     /** @test */
+    /* Move from two different groups, including the target group */
     public function testMove()
     {
         $car1 = factory(Car::class)->create();
@@ -126,13 +127,26 @@ class ArrangeableTest extends TestCase
         $pulled = [$passenger1_ids->pull(0), $passenger2_ids->pull(1)];
         $passenger2_ids = $passenger2_ids->concat($pulled);  // <-- we expect this
 
-        Passenger::arrangeableMoveGroup($pulled, $car2->id);
+        Passenger::arrangeableMove($pulled, $car2->id);
 
         $o = Passenger::where('car_id', $car1->id)->arrange()->get()->pluck('id')->toArray();
         $this->assertEquals($o, array_values($passenger1_ids->all()));
 
         $o = Passenger::where('car_id', $car2->id)->arrange()->get()->pluck('id')->toArray();
         $this->assertEquals($o, array_values($passenger2_ids->all()));
+    }
+
+    /** @test */
+    public function testMoveNoForeignKey()
+    {
+        $cars = factory(Car::class, 5)->create();
+
+        $ids = $cars->pluck('id');
+
+        Car::arrangeableMove([2,1]);
+
+        $o = Car::arrange()->get()->pluck('id')->toArray();
+        $this->assertEquals($o, [3,4,5,2,1]);
     }
 
     /** @test */
@@ -162,6 +176,14 @@ class ArrangeableTest extends TestCase
 
         $o = Passenger::where('car_id', $car->id)->arrange()->get()->pluck('order')->toArray();
         $this->assertEquals($o, [0,1,2,3,4]);
+    }
+
+    /** @test
+     *  @expectedException InvalidArgumentException
+     */
+    public function testBadMove() {
+        // requires second parameter foreign key
+        Passenger::arrangeableMove([1,2]);        
     }
 
 }

@@ -59,57 +59,63 @@ trait ArrangeableTrait
     }
 
     /**
-     * This function reorders the records: the record with the first id in the array
-     * will get order 1, the record with the second it will get order 2, ...
+     * Move a list of models to then end of another grouping (foreign key)
+     * Foreign key not required if the model does not have a foreign key,
+     * if the models to be moved are all in the same group.
      *
-     * If $foreignKeyValue is set, the foreign key will be set on each model
+     * If there are models already in the group, the ones being moved
+     * will be appended.
      *
-     * Caution: No validation is done!
-     *
-     * @param array|\ArrayAccess    $ids
-     * @param int                   $foreignKeyValue     
+     * @param array|\ArrayAccess  $ids
+     * @param int                 $foreignKeyValue
      */
-    public static function arrangeableNewOrder($ids, $foreignKeyValue = NULL)
+    public static function arrangeableMove($ids, $foreignKeyValue = NULL)
     {
 
         $order = static::arrangeableGetConfig('start_order');
-        $orderColumnName = static::arrangeableGetConfig('order_key');
         $primaryKeyColumn = static::arrangeableGetConfig('primary_key');
         $foreignKeyColumn = static::arrangeableGetConfig('foreign_key');
+        $orderColumnName = static::arrangeableGetConfig('order_key');
 
-        foreach ($ids as $id) {
-            $update = [$orderColumnName => $order++];
-            if ($foreignKeyValue !== NULL) { $update[$foreignKeyColumn] = $foreignKeyValue; }
-            static::where($primaryKeyColumn, $id)->update($update);
+        if (empty($ids)) return;
+
+        // This is a special, easier case
+        if ($foreignKeyColumn === NULL) {
+            $newOrder = static::orderBy($orderColumnName)
+                          ->select($primaryKeyColumn)
+                          ->get()
+                          ->pluck($primaryKeyColumn)
+                          ->diff($ids)
+                          ->concat($ids);
+
+            foreach ($newOrder as $id) {
+                static::where($primaryKeyColumn, $id)->update([$orderColumnName => $order++]);
+            }
+
+            return;
         }
-    }
-
-
-    /**
-     * Move a list of models to then end of another grouping (foreign key)
-     * Only for arrangeable tables that have a foreign key.
-     *
-     * @param array|\ArrayAccess $ids
-     * @param int $startOrder
-     */
-    public static function arrangeableMoveGroup($ids, $foreignKeyValue)
-    {
-
-        $primaryKeyColumn = static::arrangeableGetConfig('primary_key');
-        $foreignKeyColumn = static::arrangeableGetConfig('foreign_key');
-        $orderColumnName = static::arrangeableGetConfig('order_key');
 
         // figure out which groups will need to have their order fixed.  That's
         // all the groups the models are currently in, except the target group.
-        $needsFixOrder = static::whereIn($primaryKeyColumn, $ids)
+        $allForeignKeys = static::whereIn($primaryKeyColumn, $ids)
                            ->select($foreignKeyColumn)
                            ->get()
                            ->pluck($foreignKeyColumn)
-                           ->unique()
-                           ->diff([$foreignKeyValue]);
+                           ->unique();
 
-        // The new ordering for the group is the existing order, but with the
-        // without the ones to be moved.  They'll end up at the end.
+        // Allow no foreign key to be provided, and infer the foreign key from
+        // the models to be moved, so long as they all have the same foreign key
+        if ($foreignKeyValue === NULL) {
+            if ($allForeignKeys->count() != 1) {
+                throw new InvalidArgumentException("No foreign key provided"); 
+            }
+            $foreignKeyValue = $allForeignKeys->first();
+        }
+
+        // Any group that is having a model removed will need to have it's order fixed
+        // The group we're moving to is already being completely reordered.
+        $needsFixOrder = $allForeignKeys->diff([$foreignKeyValue]);
+
         $newOrder = static::where($foreignKeyColumn, $foreignKeyValue)
                       ->orderBy($orderColumnName)
                       ->select($primaryKeyColumn)
@@ -118,7 +124,12 @@ trait ArrangeableTrait
                       ->diff($ids)
                       ->concat($ids);
 
-        static::arrangeableNewOrder($newOrder, $foreignKeyValue);
+        foreach ($newOrder as $id) {
+            static::where($primaryKeyColumn, $id)->update([
+                $orderColumnName  => $order++,
+                $foreignKeyColumn => $foreignKeyValue,
+            ]);
+        }
 
         $needsFixOrder->each(function($id) {
             static::arrangeableFixOrder($id);
