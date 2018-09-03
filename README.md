@@ -24,31 +24,13 @@ class MyModel extends Model
 ```
 ### Methods
 
-#### ArrangeableTrait::arrangeableNewOrder(array, int = null)
+#### ArrangeableTrait::arrangeableMove(array, int = null)
 
-Set a completely new order for a group of models.
-
-```php
-// ( array of primary keys, foreign key if used)
-MyModel::arrangeableNewOrder([3,2,1],1);
-
-// | id | foreign_id | order |                | id | foreign_id | order |
-// | -- | ---------- | ----- |                | -- | ---------- | ----- |
-// | 1  | 1          | 0     |    BECOMES     | 1  | 1          | 2     |
-// | 2  | 1          | 1     |   =========>   | 2  | 1          | 1     |
-// | 3  | 1          | 2     |                | 3  | 1          | 0     |
-// | 4  | 2          | 0     |                | 4  | 2          | 0     |
-// | 5  | 2          | 1     |                | 5  | 2          | 1     |
-// | 6  | 2          | 2     |                | 6  | 2          | 2     |
-```
-
-#### ArrangeableTrait::arrangeableMoveGroup(array, int = null)
-
-This will move models with an list of ids to a different group defined by a foreign key, appending to the end of the list.  Groups with removed items will have their orders adjusted appropriately.
+This will move models with a list of ids to a different group defined by a foreign key, appending to the end of the group.  Groups with removed items will have their orders adjusted appropriately.
 
 ```php
 // ( array of primary keys, foreign key if used)
-MyModel::arrangeableMoveGroup([4,5,2],1);
+MyModel::arrangeableMove([4,5,2],1);
 
 // | id | foreign_id | order |                | id | foreign_id | order |
 // | -- | ---------- | ----- |                | -- | ---------- | ----- |
@@ -59,9 +41,40 @@ MyModel::arrangeableMoveGroup([4,5,2],1);
 // | 5  | 2          | 1     |                | 5  | 1          | 3     |
 // | 6  | 2          | 2     |                | 6  | 2          | 0     |
 ```
+
+If all the models have the same foreign key, there is no need to specify it.
+
+```php
+// ( array of primary keys, foreign key if used)
+MyModel::arrangeableMove([6,5,4]);
+
+// | id | foreign_id | order |                | id | foreign_id | order |
+// | -- | ---------- | ----- |                | -- | ---------- | ----- |
+// | 1  | 1          | 0     |    BECOMES     | 1  | 1          | 0     |
+// | 2  | 1          | 1     |   =========>   | 2  | 1          | 1     |
+// | 3  | 1          | 2     |                | 3  | 1          | 2     |
+// | 4  | 2          | 0     |                | 4  | 1          | 2     |
+// | 5  | 2          | 1     |                | 5  | 1          | 1     |
+// | 6  | 2          | 2     |                | 6  | 2          | 0     |
+```
+
+Also if the model has no foreign key, no need to specify it.
+
+```php
+// ( array of primary keys, foreign key if used)
+MyModel::arrangeableMove([2,1]);
+
+// | id | order |                | id | order |
+// | -- | ----- |                | -- | ----- |
+// | 1  | 0     |    BECOMES     | 1  | 3     |
+// | 2  | 1     |   =========>   | 2  | 2     |
+// | 3  | 2     |                | 3  | 0     |
+// | 4  | 3     |                | 4  | 1     |
+```
+
 #### ArrangeableTrait::arrangeableFixOrder(int = null)
 
-If through other operations the ordering is out of whack, fix it.
+A convenient utility should your operations cause the ordering to become irregular.
 
 ```php
 // (foreign key if used)
