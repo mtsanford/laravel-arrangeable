@@ -26,10 +26,9 @@ class MyModel extends Model
 
 #### ArrangeableTrait::arrangeableMove(array, int = null)
 
-This will move models with a list of ids to a different group defined by a foreign key, appending to the end of the group.  Groups with removed items will have their orders adjusted appropriately.
+This will move a list of models specified by id to a target group defined by a foreign key, appending them to the end of the target group in the order specified.  Models from the target group can be in the source list.  Groups with removed items will have their orders adjusted appropriately.
 
 ```php
-// ( array of primary keys, foreign key if used)
 MyModel::arrangeableMove([4,5,2],1);
 
 // | id | foreign_id | order |                | id | foreign_id | order |
@@ -42,10 +41,10 @@ MyModel::arrangeableMove([4,5,2],1);
 // | 6  | 2          | 2     |                | 6  | 2          | 0     |
 ```
 
-If all the models have the same foreign key, there is no need to specify it.
+If all the models are in the same foreign key group and will remain there, there is no need to specify it.  Reordering an entire group is just a special case of this.
 
 ```php
-// ( array of primary keys, foreign key if used)
+// reverse the order of the models with foreign key = 2
 MyModel::arrangeableMove([6,5,4]);
 
 // | id | foreign_id | order |                | id | foreign_id | order |
@@ -58,7 +57,7 @@ MyModel::arrangeableMove([6,5,4]);
 // | 6  | 2          | 2     |                | 6  | 2          | 0     |
 ```
 
-Also if the model has no foreign key, no need to specify it.
+Also if the model has no foreign key, there is no need to specify it.
 
 ```php
 // ( array of primary keys, foreign key if used)
@@ -74,20 +73,17 @@ MyModel::arrangeableMove([2,1]);
 
 #### ArrangeableTrait::arrangeableFixOrder(int = null)
 
-A convenient utility should your operations cause the ordering to become irregular.
+A convenient utility should your operations cause the ordering to become irregular.  Again, the foreign key parameter is only needed if there is a foreign key specified in $arrangeableCongig.
 
 ```php
-// (foreign key if used)
-MyModel::arrangeableFixOrder(2);
+MyModel::arrangeableFixOrder(1);
 
 // | id | foreign_id | order |                | id | foreign_id | order |
 // | -- | ---------- | ----- |                | -- | ---------- | ----- |
 // | 1  | 1          | 0     |    BECOMES     | 1  | 1          | 0     |
-// | 2  | 1          | 1     |   =========>   | 2  | 1          | 1     |
-// | 3  | 1          | 2     |                | 3  | 1          | 2     |
-// | 4  | 2          | 5     |                | 4  | 2          | 0     |
-// | 5  | 2          | 6     |                | 5  | 2          | 1     |
-// | 6  | 2          | 10    |                | 6  | 2          | 2     |
+// | 2  | 1          | 5     |   =========>   | 2  | 1          | 1     |
+// | 3  | 1          | 8     |                | 3  | 1          | 2     |
+// | 4  | 2          | 0     |                | 4  | 2          | 0     |
 ```
 ### Create and Delete
 
