@@ -1,12 +1,18 @@
-# Arrangeable behaviour for Eloquent models
+# Arrangeable behavior for Laravel models
 
-This package provides a trait that adds an arrangeable behaviour to an Eloquent model.  Instances of arrangeable models have an order column with values 0,1,2...  Arrangeable models by default do not use a foreign key for grouping, but a foreign key can be specified in configuration.
+This package provides a trait that adds an arrangeable behavior to an Laravel model.  Instances of arrangeable models have an order column with values 0,1,2...  Arrangeable models by default do not use a foreign key for grouping, but a foreign key can be specified in configuration, where each group will have it's own ordering.   Compatible with Lavavel ^5.5.
+
+## Instalation
+
+You can install using composer:
+
+```
+composer require mtsanford/laravel-arrangeable
+```
 
 ## Usage
 
-To add arrangeable behavior to your model, use the trait ```MTSanford\LaravelArrangeable\ArrangeableTrait```
-
-### Example
+To add arrangeable behavior to your model, use the trait ```MTSanford\LaravelArrangeable\ArrangeableTrait```, optionally specifying a foreign key in configuration to group models.
 
 ```php
 use MTSanford\LaravelArrangeable\ArrangeableTrait;
@@ -109,6 +115,19 @@ MyModel::find(2)->delete();
 // | 3  | 1          | 2     |
 ```
 
+### Arrange query scope
+
+```php
+MyModel::arrange()->get()->pluck('id')->all();
+
+// | id | order |
+// | -- | ----- |
+// | 1  | 0     |
+// | 2  | 1     |   =======>  [1,2,4,3]
+// | 3  | 3     |
+// | 4  | 2     |
+```
+
 ### Configuration
 
 These are the default configuration settings:
@@ -148,11 +167,15 @@ class MyModel extends Model
 
 ## Tests
 
-The package contains some phpunit tests, using Orchestra.
+The package contains some phpunit tests, using Orchestra.  After installation run:
 
 ```
 $ vendor/bin/phpunit
 ```
+
+## Credits
+
+Inspired by [spatie/eloquent-sortable](https://github.com/spatie/eloquent-sortable).
 
 ## About
 
