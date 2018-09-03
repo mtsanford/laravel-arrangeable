@@ -24,11 +24,12 @@ class MyModel extends Model
 ```
 ### Methods
 
-#### ArrangeableTrait::arrangeableMove(array, int = null)
+#### ArrangeableTrait::arrangeableMove(array, int | null)
 
 This will move a list of models specified by id to a target group defined by a foreign key, appending them to the end of the target group in the order specified.  Models from the target group can be in the source list.  Groups with removed items will have their orders adjusted appropriately.
 
 ```php
+// Move models 4, 5, and 2 to the end of the group with foreign key = 1
 MyModel::arrangeableMove([4,5,2],1);
 
 // | id | foreign_id | order |                | id | foreign_id | order |
@@ -60,7 +61,7 @@ MyModel::arrangeableMove([6,5,4]);
 Also if the model has no foreign key, there is no need to specify it.
 
 ```php
-// ( array of primary keys, foreign key if used)
+// Move models 2 and 1 to the end of the arrangement group
 MyModel::arrangeableMove([2,1]);
 
 // | id | order |                | id | order |
@@ -71,9 +72,9 @@ MyModel::arrangeableMove([2,1]);
 // | 4  | 3     |                | 4  | 1     |
 ```
 
-#### ArrangeableTrait::arrangeableFixOrder(int = null)
+#### ArrangeableTrait::arrangeableFixOrder(int | null)
 
-A convenient utility should your operations cause the ordering to become irregular.  Again, the foreign key parameter is only needed if there is a foreign key specified in $arrangeableCongig.
+A convenient utility should your operations cause the ordering to become irregular.  Again, the foreign key parameter is only needed if there is a foreign key specified in $arrangeableConfig (see below).
 
 ```php
 MyModel::arrangeableFixOrder(1);
@@ -87,7 +88,7 @@ MyModel::arrangeableFixOrder(1);
 ```
 ### Create and Delete
 
-By default, creating and deleted model events are listened to, and the orders within the group are kept up to date.
+By default, 'creating' and 'deleted' model events are listened to, and the orders within the group are kept up to date.
 
 ```php
 new MyModel(['foreign_id' => 1]);
